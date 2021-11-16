@@ -1,4 +1,4 @@
-#Author: Shahar Hikri, Date: 15.11.2021 13:40
+#Author: Shahar Hikri, Date: 16.11.2021 17:50
 # The program displays all the tables in the chinook.db database.
 # After selecting a table and datatype, the window will display the selected table and a return button.
 # By clicking on a column header, the table will be sorted by this column in ascending order.
@@ -57,6 +57,18 @@ def executeReadingQuery(cursor, query: str) -> list:
     return cursor.fetchall()
 
 
+def getTableNamesList(cur):
+    """
+    checkTableExists(...) check if a table exists in the DB.
+    :param cur: cursor (sqlite3 object) of a connection to DB.
+    :return: list of table names.
+    """
+    Q0 = "SELECT name FROM sqlite_master WHERE type='table';"
+    q_result = executeReadingQuery(cur,Q0)
+    table_names_list = [t[0] for t in q_result]
+    return table_names_list
+
+
 def checkTableExists(cur, table_name: str):
     """
     checkTableExists(...) check if a table exists in the DB.
@@ -65,9 +77,7 @@ def checkTableExists(cur, table_name: str):
     :return: True - if the table exists in the DB, else - False.
     """
     #Trying extract table information
-    Q0 = "SELECT name FROM sqlite_master WHERE type='table';"
-    table_names = executeReadingQuery(cur,Q0)
-    table_names = [t[0] for t in table_names]
+    table_names = getTableNamesList(cur)
     return table_names.__contains__(table_name)
 
 
@@ -220,10 +230,8 @@ def setupMainWindow(window, cur):
     Label(wrapper, text="Table:", anchor='w', font=("Ariel", 8), fg="grey").grid(column=0, row=0, padx=0, pady = 5)
     Label(wrapper, text="DataType:", anchor='w', font=("Ariel", 8), fg="grey").grid(column=0, row=1, padx=0, pady=5)
 
-    # Tables Combobox for table names
-    Q0 = "SELECT name FROM sqlite_master WHERE type='table';"
-    table_names = executeReadingQuery(cur,Q0)
-    table_names = [t[0] for t in table_names]
+    # Combobox for Table Names
+    table_names = getTableNamesList(cur)
     # table_names.append('FakeTable') #for checking handling table that had been removed (in real time).
     tablenames_combobox = ttk.Combobox(wrapper, values=table_names, state = "readonly")
     tablenames_combobox.current(0)
