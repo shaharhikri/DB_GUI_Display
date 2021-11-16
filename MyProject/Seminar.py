@@ -22,7 +22,6 @@ def getFormatTime():
     return datetime.datetime.now().strftime('%d/%m/%Y %X')
 
 
-#Return
 def openLogFile():
     """
     openLogFile() creates the log file "./Log/Log_'Date'_'Time'.txt" and create 'Log' directory if doesn't exist.
