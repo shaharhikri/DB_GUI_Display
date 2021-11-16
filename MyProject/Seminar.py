@@ -58,9 +58,9 @@ def executeReadingQuery(cursor, query: str) -> list:
 
 def getTableNamesList(cur):
     """
-    checkTableExists(...) check if a table exists in the DB.
+    getTableNamesList(...) gives list of table names.
     :param cur: cursor (sqlite3 object) of a connection to DB.
-    :return: list of table names.
+    :return:  list of table names.
     """
     Q0 = "SELECT name FROM sqlite_master WHERE type='table';"
     q_result = executeReadingQuery(cur,Q0)
