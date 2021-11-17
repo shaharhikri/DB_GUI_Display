@@ -1,4 +1,4 @@
-#Author: Shahar Hikri, Date: 16.11.2021 17:50
+#Author: Shahar Hikri, Date: 17.11.2021 12:50
 # The program displays all the tables in the chinook.db database.
 # After selecting a table and datatype, the window will display the selected table and a return button.
 # By clicking on a column header, the table will be sorted by this column in ascending order.
@@ -170,7 +170,7 @@ def showTableInfo(window, cur, table_name: str, show_metadata):
     #Create TreeView Frame
     treev_frame = Frame(window)
     # treev_frame.grid(column=4, row=1, sticky="n")
-    treev_frame.pack(padx=5, pady=5,side='top')
+    treev_frame.pack(padx=5, pady=5,side='top',fill="both", expand=1)
 
     #Create TreeView Scrollbars
     treev_right_scroll = Scrollbar(treev_frame, orient=VERTICAL)
@@ -182,7 +182,7 @@ def showTableInfo(window, cur, table_name: str, show_metadata):
     table_headers = list(map(lambda x: x[0], cur.description))
     col = tuple((i for i in range(1, len(table_headers) + 1)))
     treev = ttk.Treeview(treev_frame, columns=col, height=20, show="headings", yscrollcommand=treev_right_scroll.set,xscrollcommand=treev_down_scroll.set)
-    treev.pack(side='top')
+    treev.pack(side='top',fill="both", expand=1)
 
     #Config Scrollbar
     treev_right_scroll.config(command=treev.yview)
@@ -231,7 +231,7 @@ def setupMainWindow(window, cur):
 
     # Combobox for Table Names
     table_names = getTableNamesList(cur)
-    # table_names.append('FakeTable') #for checking handling table that had been removed (in real time).
+    table_names.append('FakeTable') #for checking handling table that had been removed (in real time).
     tablenames_combobox = ttk.Combobox(wrapper, values=table_names, state = "readonly")
     tablenames_combobox.current(0)
     tablenames_combobox.grid(column=1, row=0, padx=20, pady = 5)# tablenames_combobox.pack(pady=5, padx=10, side='top')
