@@ -1,10 +1,10 @@
-#Author: Shahar Hikri, Date: 17.11.2021 12:50
+#Author: Shahar Hikri, Date: 17.11.2021 12:55
 # The program displays all the tables in the chinook.db database.
-# After selecting a table and datatype, the window will display the selected table and a return button.
+# After selecting a table and datatype, the window will display the selected table.
 # By clicking on a column header, the table will be sorted by this column in ascending order.
 # Another click will sort the table by column in descending order.
-# If the table is deleted during the selection - a notification (Error window) about it will be given.
-# If the DB didn't - a notification (Error window) about it will be given.
+# If the table is deleted during the selection - an error message about it will be given.
+# If the DB didn't -  an error message about it will be given and comboboxes won't be displayed.
 # Errors will be printed to the file: "./Log/Log_'Date'_'Time'.txt".
 
 import sys
