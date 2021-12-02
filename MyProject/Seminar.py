@@ -1,4 +1,4 @@
-#Author: Shahar Hikri, Date: 17.11.2021 12:55
+# Author: Shahar Hikri, Date: 1.12.2021 18:30
 # The program displays all the tables in the chinook.db database.
 # After selecting a table and datatype, the window will display the selected table.
 # By clicking on a column header, the table will be sorted by this column in ascending order.
@@ -32,8 +32,8 @@ def openLogFile():
     openFile = lambda: open(log_path + log_file_name, 'w', encoding="utf-8")
     try:
         return openFile()
-    except FileNotFoundError: # dir "./Log/" doesn't exist
-        os.mkdir(log_path)   # make dir "./Log/"
+    except FileNotFoundError:  # dir "./Log/" doesn't exist
+        os.mkdir(log_path)  # make dir "./Log/"
         return openFile()
 
 
@@ -42,7 +42,7 @@ def logOut(msg: str):
     logOut(...) output texts to the log.
     :param msg: message (string) to log out
     """
-    print('['+ getFormatTime()+'] '+msg)
+    print('[' + getFormatTime() + '] ' + msg)
 
 
 def executeReadingQuery(cursor, query: str) -> list:
@@ -63,7 +63,7 @@ def getTableNamesList(cur):
     :return:  list of table names.
     """
     Q0 = "SELECT name FROM sqlite_master WHERE type='table';"
-    q_result = executeReadingQuery(cur,Q0)
+    q_result = executeReadingQuery(cur, Q0)
     table_names_list = [t[0] for t in q_result]
     return table_names_list
 
@@ -75,7 +75,7 @@ def checkTableExists(cur, table_name: str):
     :param table_name: name of table
     :return: True - if the table exists in the DB, else - False.
     """
-    #Trying extract table information
+    # Trying extract table information
     table_names = getTableNamesList(cur)
     return table_names.__contains__(table_name)
 
@@ -90,7 +90,7 @@ def setWindowIcon(window, icon_path: str):
     try:
         window.iconbitmap(icon_path)
     except TclError:
-        logOut("Error: Icon \'"+icon_path+"\' didn't found, the program continue with the default icon.")
+        logOut("Error: Icon \'" + icon_path + "\' didn't found, the program continue with the default icon.")
 
 
 def removeValFromCombobox(combobox, val: str):
@@ -102,23 +102,6 @@ def removeValFromCombobox(combobox, val: str):
     options = list(combobox['values'])
     options.remove(val)
     combobox['values'] = options
-
-
-def treeviewSortColumn(treev, col: int, reverse: bool):
-    """
-    treeviewSortColumn(...) Sorts tkinter treeview by column.
-    :param treev: treeview you want to sort bu column.
-    :param col: the col (index) you want to sort by.
-    :param reverse: True - for descending, False - for ascending, will be switched every call.
-    """
-    l = [(treev.set(k, col), k) for k in treev.get_children('')]
-    try:
-        l.sort(key=lambda t: int(t[0]), reverse=reverse)
-    except ValueError:
-        l.sort(reverse=reverse)
-    for index, (val, k) in enumerate(l):
-        treev.move(k, '', index)
-    treev.heading(col, command=lambda: treeviewSortColumn(treev, col, not reverse))
 
 
 def showError(window, err_msg):
@@ -133,10 +116,33 @@ def showError(window, err_msg):
     setWindowIcon(window, 'icons/error_icon.ico')
     window.title('ERROR')
 
-    #Error label
-    label = Label(window, text = err_msg,font=("Ariel", 12, "bold"), fg="red")
-    label.pack(padx=30, pady=50)# label.grid(column=0, row=4)
+    # Error label
+    label = Label(window, text=err_msg, font=("Ariel", 12, "bold"), fg="red")
+    label.pack(padx=30, pady=50)  # label.grid(column=0, row=4)
     return [label]
+
+
+def treeviewSortColumn(treev, col: int, reverse: bool, numOfLastRowsToIgnore: bool):
+    """
+    treeviewSortColumn(...) Sorts tkinter treeview by column.
+    :param treev: treeview you want to sort bu column.
+    :param col: the col (index) you want to sort by.
+    :param reverse: True - for descending, False - for ascending, will be switched every call.
+    :param numOfLastRowsToIgnore: in sorting ignore(exclude) the numOfLastRowsToIgnore # of last rows(this last rows stay in the bottom of the table).
+    """
+    l = [(treev.set(k, col), k) for k in treev.get_children('')]
+    if len(l) > 0 and numOfLastRowsToIgnore>0:
+        for i in range(numOfLastRowsToIgnore):
+            l.remove(l[-1])
+    try:
+        l.sort(key=lambda t: int(t[0]), reverse=reverse)
+    except ValueError:
+        l.sort(reverse=reverse)
+
+    for index, (val, k) in enumerate(l):
+        treev.move(k, '', index)
+
+    treev.heading(col, command=lambda: treeviewSortColumn(treev, col, not reverse, numOfLastRowsToIgnore))
 
 
 def showTableInfo(window, cur, table_name: str, show_metadata):
@@ -149,69 +155,72 @@ def showTableInfo(window, cur, table_name: str, show_metadata):
     :return: the elements that added to the window.
     """
 
-    #Config window
+    # Config window
     setWindowIcon(window, 'icons/table_icon.ico')
-    window.title((table_name[0].upper()+table_name[1:] if len(table_name)>1 else table_name)+' '+('Metadata' if show_metadata else 'Data'))
+    window.title((table_name[0].upper() + table_name[1:] if len(table_name) > 1 else table_name) + ' ' + (
+        'Metadata' if show_metadata else 'Data'))
 
-    #Extract table information
+    # Extract table information
     Q_data = "SELECT * FROM " + table_name
     Q_metadata = "PRAGMA table_info(" + table_name + ")"
     if show_metadata:
         Q1 = Q_metadata
-        # Statistics label init
-        stat_label = Label(window)
-        stat_label.pack(pady=0, side='bottom')
-        stat_title_label = Label(window, text='Statistics', font=("Ariel", 10, "bold"), fg="grey")
-        stat_title_label.pack(pady=0, side='bottom')
     else:
-        Q1= Q_data
+        Q1 = Q_data
     table = executeReadingQuery(cur, Q1)
 
-    #Create TreeView Frame
+    # Create TreeView Frame
     treev_frame = Frame(window)
-    # treev_frame.grid(column=4, row=1, sticky="n")
-    treev_frame.pack(padx=5, pady=5,side='top',fill="both", expand=1)
+    treev_frame.pack(padx=5, pady=8, side='top', fill="both", expand=1)
 
-    #Create TreeView Scrollbars
+    # Create TreeView Scrollbars
     treev_right_scroll = Scrollbar(treev_frame, orient=VERTICAL)
     treev_right_scroll.pack(side=RIGHT, fill=Y)
     treev_down_scroll = Scrollbar(treev_frame, orient=HORIZONTAL)
     treev_down_scroll.pack(side=BOTTOM, fill=X)
 
-    #Create TreeView
+    # Create TreeView
     table_headers = list(map(lambda x: x[0], cur.description))
-    col = tuple((i for i in range(1, len(table_headers) + 1)))
-    treev = ttk.Treeview(treev_frame, columns=col, height=20, show="headings", yscrollcommand=treev_right_scroll.set,xscrollcommand=treev_down_scroll.set)
-    treev.pack(side='top',fill="both", expand=1)
+    cols = tuple((i for i in range(1, len(table_headers) + 1)))
+    treev = ttk.Treeview(treev_frame, columns=cols, show="headings", yscrollcommand=treev_right_scroll.set,
+                         xscrollcommand=treev_down_scroll.set)
+    treev.pack(side='top', fill="both", expand=1)
 
-    #Config Scrollbar
+    # Config Scrollbar
     treev_right_scroll.config(command=treev.yview)
     treev_down_scroll.config(command=treev.xview)
 
-    #Data into the threeview
+    # Data into the threeview
     for col in range(1, len(table_headers) + 1):
         treev.heading(col, text=table_headers[col - 1], anchor='nw')
-        treev.column(col, width=100, stretch=False)
-        treeviewSortColumn(treev, col, True)
+        treev.column(col, stretch=NO)
+        treeviewSortColumn(treev, col, True,4 if show_metadata else 0)
 
     for x in treev.get_children():
         treev.delete(x)
 
     cur.execute(Q1)
     for row in cur:
-        treev.insert('', 'end', values=row)
+        fixed_row = list(row)
+        if show_metadata:
+            for i in [3,5]:
+                if fixed_row[i]==1:
+                    fixed_row[i] = 'Yes'
+                elif fixed_row[i]==0:
+                    fixed_row[i] = 'No'
+        treev.insert('', 'end', values=fixed_row)
 
-    views = [treev,treev_frame,treev_right_scroll,treev_down_scroll]
-
-    # Statistics label config
+    # Statistics rows config
     if show_metadata:
         num_of_cols = len(table)
-        num_of_rows = executeReadingQuery(cur,"SELECT COUNT(*) FROM " + table_name)[0][0]
-        stat_label.config(text='num of cols - '+str(num_of_cols)+'\nnum of rows - ' + str(num_of_rows), relief="sunken", justify="left",font=("Ariel", 9), fg="grey")
-        views.append(stat_label)
-        views.append(stat_title_label)
+        num_of_rows = executeReadingQuery(cur, "SELECT COUNT(*) FROM " + table_name)[0][0]
+        empty_start = ['' for i in range(len(table_headers) - 1)]
+        treev.insert('', 'end', values=empty_start + [''])
+        treev.insert('', 'end', values=empty_start + ['Statistics:'])
+        treev.insert('', 'end', values=empty_start + ['* num of cols - '+ str(num_of_cols)])
+        treev.insert('', 'end', values=empty_start + ['* num of rows - '+ str(num_of_rows)])
 
-    return views
+    return [treev, treev_frame, treev_right_scroll, treev_down_scroll]
 
 
 def setupMainWindow(window, cur):
@@ -221,63 +230,58 @@ def setupMainWindow(window, cur):
     :param cur: the window (some tkinter.TK).
     """
 
-    #Selection Wrapper (frame) - wraps the comboboxes and their titles.
-    wrapper = LabelFrame(window, text = 'Select a Table & DataType:', font=("Ariel", 10, "bold"))
+    # Selection Wrapper (frame) - wraps the comboboxes and their titles.
+    wrapper = LabelFrame(window, text='Select a Table & DataType:', font=("Ariel", 10, "bold"))
     wrapper.pack(pady=2, padx=30, side='top')
 
     # Comoboxes tiltes
-    Label(wrapper, text="Table:", anchor='w', font=("Ariel", 8), fg="grey").grid(column=0, row=0, padx=0, pady = 5)
+    Label(wrapper, text="Table:", anchor='w', font=("Ariel", 8), fg="grey").grid(column=0, row=0, padx=0, pady=5)
     Label(wrapper, text="DataType:", anchor='w', font=("Ariel", 8), fg="grey").grid(column=0, row=1, padx=0, pady=5)
 
     # Combobox for Table Names
     table_names = getTableNamesList(cur)
-    table_names.append('FakeTable') #for checking handling table that had been removed (in real time).
-    tablenames_combobox = ttk.Combobox(wrapper, values=table_names, state = "readonly")
+    # table_names.append('FakeTable') #for checking handling table that had been removed (in real time).
+    tablenames_combobox = ttk.Combobox(wrapper, values=table_names, state="readonly")
     tablenames_combobox.current(0)
-    tablenames_combobox.grid(column=1, row=0, padx=20, pady = 5)# tablenames_combobox.pack(pady=5, padx=10, side='top')
+    tablenames_combobox.grid(column=1, row=0, padx=20, pady=5)  # tablenames_combobox.pack(pady=5, padx=10, side='top')
 
     # Combobox for datatype
-    datatype_combobox = ttk.Combobox(wrapper, values=["Data","Metadata"], state = "readonly")
+    datatype_combobox = ttk.Combobox(wrapper, values=["Data", "Metadata"], state="readonly")
     datatype_combobox.current(0)
-    datatype_combobox.grid(column=1, row=1, padx=20, pady = 5) # datatype_combobox.pack(pady=5, padx=10, side='top')
-
-    # Credit label
-    labelCredit = Label(window, text="Created by Shahar Hikri", anchor='w',font=("Ariel", 8), fg="grey")
-    labelCredit.pack(pady=10, padx=10, side='bottom', fill='both')
+    datatype_combobox.grid(column=1, row=1, padx=20, pady=5)  # datatype_combobox.pack(pady=5, padx=10, side='top')
 
     # Tables Combobox command
-    def combobox_command(last_option = [None,None], table_info_views =  []):
+    def combobox_command(last_selection=[None, None], last_selection_views=[]):
         # if the current selection is the same as the last - do nothing!
-        if last_option[0]==tablenames_combobox.current() and last_option[1]==datatype_combobox.current():
+        if last_selection[0] == tablenames_combobox.current() and last_selection[1] == datatype_combobox.current():
             return
 
         table_name = table_names[tablenames_combobox.current()]
         if checkTableExists(cur, table_name):
-            l = showTableInfo(window, cur,table_name, (datatype_combobox.current()==1))
+            views = showTableInfo(window, cur, table_name, (datatype_combobox.current() == 1))
         else:
             deleted_table_msg = "Table ''" + table_name + "'' is no longer exists."
-            l = showError(window, deleted_table_msg)
+            views = showError(window, deleted_table_msg)
             logOut('Error: ' + deleted_table_msg)
-            removeValFromCombobox(tablenames_combobox, table_name)  #Remove this option (the name of the table which doesn't exist) from tablenames_combobox
+            removeValFromCombobox(tablenames_combobox,
+                                  table_name)  # Remove this option (the name of the table which doesn't exist) from tablenames_combobox
 
         # Destroy views from the last selection
-        for view in table_info_views:
+        for view in last_selection_views:
             view.destroy()
-        table_info_views.clear()
-        # Add to table_info_views the views of the current selection
-        for val in l:
-            table_info_views.append(val)
+        last_selection_views.clear()
+        # Add to last_selection_views the views of the current selection
+        last_selection_views.extend(views)
+        # Save the current selection for the next selection
+        last_selection[0] = tablenames_combobox.current()
+        last_selection[1] = datatype_combobox.current()
 
-        #Save the current selection for the next selection
-        last_option[0] = tablenames_combobox.current()
-        last_option[1] = datatype_combobox.current()
-
-    combobox_command() # The first screen - by comboboxes default selections
+    combobox_command()  # The first screen - by comboboxes default selections
     tablenames_combobox.bind('<<ComboboxSelected>>', lambda event: combobox_command())
     datatype_combobox.bind('<<ComboboxSelected>>', lambda event: combobox_command())
 
 
-def run(db_name,win_w,win_h,win_min_w,win_min_h):
+def run(db_name, win_w, win_h, win_min_w, win_min_h):
     """
     run(...) runs the GUI program on db.
     :param db_name: the DB path (and name).
@@ -289,11 +293,12 @@ def run(db_name,win_w,win_h,win_min_w,win_min_h):
 
     # Config window
     window = Tk()
-    window.geometry(str(win_w)+'x'+str(win_h))
-    window.minsize(win_min_w,win_min_h)
+    window.geometry(str(win_w) + 'x' + str(win_h))
+    window.minsize(win_min_w, win_min_h)
     window.resizable(True, True)
+    window.wm_attributes("-topmost", 1)
 
-    if os.path.isfile(db_name): #change to "if False:" for checking
+    if os.path.isfile(db_name):  # change to "if False:" for checking
         conn = sqlite3.connect(db_name);
         cur = conn.cursor()
         setupMainWindow(window, cur)
@@ -302,8 +307,8 @@ def run(db_name,win_w,win_h,win_min_w,win_min_h):
     else:
         # 'DB doesn't exist' Error window
         err_msg = 'The DB \'' + db_name + '\' doesn\'t exist.'
-        logOut('Error: '+err_msg)
-        showError(window,err_msg)
+        logOut('Error: ' + err_msg)
+        showError(window, err_msg)
         window.mainloop()
 
 
@@ -311,10 +316,10 @@ def main():
     """
     main() starts the program and adjusts the output to a log file.
     """
-    sys.stdout = openLogFile() # print into log file
-    run('chinook.db',500,500,350,300)
+    sys.stdout = openLogFile()  # print into log file
+    run('chinook.db', 500, 500, 350, 300)
     sys.stdout.close()
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     main()
