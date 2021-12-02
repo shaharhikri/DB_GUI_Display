@@ -7,4 +7,4 @@ Graphical interface for displaying "chinook" DB using python (tkinter&amp;sqlite
 * If the table is deleted during the selection - an error message about it will be given.
 * If the DB didn't -  an error message about it will be given and comboboxes won't be displayed.
 * Errors will be printed to the file: "./Log/Log_'Date'_'Time'.txt".
-<img src="https://raw.githubusercontent.com/shaharhikri/chinook_DB__GUI_Display/main/README_IMG.png?token=ALRAVY7IOQNAGSCMXMBXDPTBVCKII">
+<img src="https://i.imgur.com/mTjO6Zf.png">
